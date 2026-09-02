@@ -1,0 +1,10 @@
+{
+  "name": "AitherTech",
+  "short_name": "AitherTech",
+  "description": "The AitherTech connected technology platform.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#060a12",
+  "theme_color": "#07101f",
+  "icons": []
+}
