@@ -1,144 +1,85 @@
-(() => {
-  'use strict';
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const body=document.body;
 
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+/* Company-site polish: announcement bar, stronger hierarchy, subtle motion, accessibility, and interactive demo states. */
+const css=document.createElement('style');
+css.textContent=`
+:root{--aither-accent:#69adff;--aither-violet:#8b7cff}
+body{overflow-x:hidden}
+.announcement{background:linear-gradient(90deg,#0d1b30,#101b2d);border-bottom:1px solid #ffffff12;color:#a9bbd1;font-size:12px}
+.announcement .wrap{min-height:34px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.announcement a{color:#dcecff;text-decoration:underline;text-underline-offset:3px}
+.nav{position:relative}
+.logo:focus-visible,.links a:focus-visible,.btn:focus-visible,.icon:focus-visible,.sidebar button:focus-visible,summary:focus-visible{outline:2px solid var(--aither-accent);outline-offset:3px}
+.links a{position:relative}.links a:after{content:"";position:absolute;left:0;right:100%;bottom:-7px;height:2px;background:linear-gradient(90deg,var(--aither-accent),var(--aither-violet));transition:.2s}.links a:hover:after,.links a[aria-current="true"]:after{right:0}
+.hero{position:relative}.hero:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-280px;top:-100px;background:radial-gradient(circle,#4d8fe51c,transparent 67%);pointer-events:none}
+.eyebrow{display:flex;align-items:center;gap:8px}.eyebrow:before{content:"";width:22px;height:1px;background:currentColor;opacity:.8}
+.card,.domain,.price,.mock,.cta{transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}.card:hover,.domain:hover{transform:translateY(-3px);box-shadow:0 18px 45px #0004}
+.price:hover{transform:translateY(-4px)}
+.metric-strip{padding:30px 0;border-block:1px solid var(--l);background:#080e18}.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--l)}.metric{background:#080e18;padding:8px 20px}.metric strong{display:block;font-size:24px;letter-spacing:-.04em}.metric span{font-size:11px;color:#718096}
+.backtop{position:fixed;right:18px;bottom:18px;width:42px;height:42px;border-radius:50%;border:1px solid #2d4563;background:#0d1725;color:#fff;z-index:80;cursor:pointer;opacity:0;transform:translateY(12px);transition:.2s}.backtop.show{opacity:1;transform:none}
+.progress{position:fixed;top:0;left:0;height:2px;width:0;background:linear-gradient(90deg,var(--aither-accent),var(--aither-violet));z-index:300}
+.theme-toggle{min-width:42px}
+.light{--bg:#f5f8fc!important;--p:#fff!important;--p2:#f7f9fc!important;--t:#101827!important;--m:#526176!important;--l:#dbe3ed!important;--b:#1769c2!important;--b2:#6548d8!important}.light body{background:radial-gradient(900px 550px at 80% -10%,#dcecff,transparent 62%),#f5f8fc!important}.light .top{background:#ffffffd9}.light .alt,.light .metric-strip{background:#edf3f9}.light .mock,.light .app{background:#fff}.light .btn,.light .icon{color:#101827;background:#fff}.light .primary{color:#fff;background:linear-gradient(135deg,#1769c2,#6548d8)}
+@media(max-width:700px){.metric-grid{grid-template-columns:1fr 1fr}.metric{padding:12px 14px}.announcement .wrap{padding:7px 12px}.hero:before{display:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+`;
+document.head.appendChild(css);
 
-  /* AitherTech UI layer: progressive enhancement only. */
-  const style = document.createElement('style');
-  style.textContent = `
-    :root{--aither-accent:#69adff;--aither-purple:#8b7cff;--aither-glow:rgba(105,173,255,.22)}
-    body{overflow-x:hidden}
-    ::selection{background:var(--aither-accent);color:#06101d}
-    .aither-progress{position:fixed;top:0;left:0;width:0;height:3px;background:linear-gradient(90deg,var(--aither-accent),var(--aither-purple));z-index:9999;box-shadow:0 0 14px var(--aither-accent);transition:width .08s linear}
-    .aither-reveal{opacity:0;transform:translateY(18px);transition:opacity .55s ease,transform .55s ease}
-    .aither-reveal.is-visible{opacity:1;transform:none}
-    .aither-top{position:fixed;right:18px;bottom:18px;z-index:80;width:42px;height:42px;border:1px solid #29405e;border-radius:50%;background:#0d1624eF;color:#fff;backdrop-filter:blur(14px);cursor:pointer;opacity:0;transform:translateY(10px);pointer-events:none;transition:.2s}
-    .aither-top.show{opacity:1;transform:none;pointer-events:auto}
-    .aither-theme{display:inline-grid;place-items:center;width:40px;height:40px;padding:0}
-    .aither-light{--bg:#f5f8fc;--p:#fff;--p2:#f4f7fb;--t:#101827;--m:#536276;--l:#d9e1ec;background:var(--bg)!important;color:var(--t)!important}
-    .aither-light .top{background:rgba(255,255,255,.86)!important}
-    .aither-light .card,.aither-light .dashboard,.aither-light .sidebar,.aither-light .domain,.aither-light .faq details{background:var(--p)!important;color:var(--t)}
-    .aither-light .alt{background:#edf2f8!important}.aither-light .head p,.aither-light .card p,.aither-light .lead{color:var(--m)!important}
-    .aither-light .btn:not(.primary),.aither-light .icon{background:#fff;color:#101827;border-color:#d5deea}
-    .aither-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#44d19a;box-shadow:0 0 0 4px rgba(68,209,154,.12);margin-right:6px}
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}.aither-reveal{opacity:1;transform:none}}
-  `;
-  document.head.appendChild(style);
+// Announcement bar
+if(!$('.announcement')){
+ const bar=document.createElement('div');bar.className='announcement';bar.innerHTML='<div class="wrap"><span>Introducing the AitherTech platform</span><span>•</span><a href="#products">Explore the ecosystem</a></div>';
+ const top=$('.top');top?.parentNode.insertBefore(bar,top);
+}
 
-  const progress = document.createElement('div');
-  progress.className = 'aither-progress';
-  document.body.prepend(progress);
+// Scroll progress + back to top
+const progress=document.createElement('div');progress.className='progress';body.appendChild(progress);
+const back=document.createElement('button');back.className='backtop';back.type='button';back.setAttribute('aria-label','Back to top');back.textContent='↑';body.appendChild(back);
+const updateScroll=()=>{const max=document.documentElement.scrollHeight-innerHeight;progress.style.width=(max>0?(scrollY/max)*100:0)+'%';back.classList.toggle('show',scrollY>500)};
+addEventListener('scroll',updateScroll,{passive:true});updateScroll();back.onclick=()=>scrollTo({top:0,behavior:'smooth'});
 
-  const topButton = document.createElement('button');
-  topButton.className = 'aither-top';
-  topButton.type = 'button';
-  topButton.setAttribute('aria-label', 'Back to top');
-  topButton.textContent = '↑';
-  document.body.appendChild(topButton);
-  topButton.addEventListener('click', () => window.scrollTo({top: 0, behavior: 'smooth'}));
+// Accessible mobile drawer
+const drawer=$('#drawer'), menu=$('.menu');
+const toggleDrawer=()=>{drawer?.classList.toggle('open');if(drawer) drawer.setAttribute('aria-hidden',drawer.classList.contains('open')?'false':'true');};
+window.toggleDrawer=toggleDrawer;
+menu?.setAttribute('aria-expanded','false');menu?.addEventListener('click',()=>menu.setAttribute('aria-expanded',drawer?.classList.contains('open')?'true':'false'));
+$$('.drawer a').forEach(a=>a.addEventListener('click',()=>{drawer?.classList.remove('open');menu?.setAttribute('aria-expanded','false')}));
 
-  // Reveal sections/cards as they enter the viewport.
-  $$('.card,.head,.portal,.cta,.domains,.faq,.mock,.hero > div').forEach((el, i) => {
-    if (!el.classList.contains('aither-reveal')) {
-      el.classList.add('aither-reveal');
-      el.style.transitionDelay = `${Math.min(i % 6, 5) * 45}ms`;
-    }
-  });
+// Search
+const searchOverlay=$('#search');
+window.openSearch=()=>{if(searchOverlay){searchOverlay.classList.add('open');setTimeout(()=>searchOverlay.querySelector('input')?.focus(),30)}};
+const searchInput=searchOverlay?.querySelector('input');
+searchInput?.addEventListener('input',()=>{const q=searchInput.value.trim().toLowerCase();$$('.results button').forEach(b=>b.hidden=!!q&&!b.textContent.toLowerCase().includes(q))});
 
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, {threshold: .08, rootMargin: '0px 0px -35px'});
-  $$('.aither-reveal').forEach(el => observer.observe(el));
+// Modal system
+const modal=$('#modal');
+window.openModal=(title,text)=>{if(!modal)return;$('#modal-title').textContent=title;$('#modal-text').textContent=text;modal.classList.add('open');body.style.overflow='hidden'};
+const closeModal=()=>{modal?.classList.remove('open');if(!$('.drawer.open')&&!$('.search.open'))body.style.overflow=''};
+$('#close-modal')?.addEventListener('click',closeModal);modal?.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+$$('[data-modal]').forEach(b=>b.addEventListener('click',()=>window.openModal(b.dataset.modal,b.dataset.message||'This AitherTech feature is ready for the next integration step.')));
 
-  function updateScrollUI() {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    progress.style.width = `${max > 0 ? Math.min(100, (window.scrollY / max) * 100) : 0}%`;
-    topButton.classList.toggle('show', window.scrollY > 550);
-  }
-  window.addEventListener('scroll', updateScrollUI, {passive: true});
-  updateScrollUI();
+// Dashboard demo state
+const panels={overview:['Overview','AitherTech platform overview and system status.'],devices:['My Devices','Manage connected Aither devices, firmware, and status.'],cloud:['Aither Cloud','Review storage, backups, media, logs, and cloud services.'],security:['Security Settings','Manage authentication, two-factor protection, API keys, and audit controls.'],billing:['Billing','Manage plans, invoices, licenses, and payment settings.']};
+$$('[data-panel]').forEach(b=>b.addEventListener('click',()=>{ $$('.side button,.sidebar button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const p=panels[b.dataset.panel]?b.dataset.panel:'overview';const data=panels[p];$('#dash-title')&&( $('#dash-title').textContent=data[0]);$('#dash-copy')&&( $('#dash-copy').textContent=data[1]);}));
 
-  // Add a theme button without changing the existing HTML structure.
-  const tools = $('.tools') || $('.navtools');
-  if (tools && !$('.aither-theme', tools)) {
-    const theme = document.createElement('button');
-    theme.className = 'icon aither-theme';
-    theme.type = 'button';
-    theme.title = 'Toggle theme';
-    theme.setAttribute('aria-label', 'Toggle light and dark theme');
-    theme.textContent = '☼';
-    tools.insertBefore(theme, tools.firstChild);
+// Theme switcher
+const themeKey='aither-theme';
+const saved=localStorage.getItem(themeKey);if(saved==='light')body.classList.add('light');
+const holder=$('.tools')||$('.navtools');
+if(holder&&!$('.theme-toggle')){const t=document.createElement('button');t.className='icon theme-toggle';t.type='button';t.title='Toggle appearance';t.setAttribute('aria-label','Toggle appearance');t.textContent=body.classList.contains('light')?'☾':'☼';holder.insertBefore(t,holder.firstChild);t.onclick=()=>{body.classList.toggle('light');const light=body.classList.contains('light');localStorage.setItem(themeKey,light?'light':'dark');t.textContent=light?'☾':'☼'}}
 
-    const saved = localStorage.getItem('aither-theme');
-    if (saved === 'light') document.body.classList.add('aither-light');
-    theme.addEventListener('click', () => {
-      const light = document.body.classList.toggle('aither-light');
-      localStorage.setItem('aither-theme', light ? 'light' : 'dark');
-      theme.textContent = light ? '☾' : '☼';
-    });
-    theme.textContent = document.body.classList.contains('aither-light') ? '☾' : '☼';
-  }
+// Reveal-on-scroll, only when motion is allowed
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&'IntersectionObserver'in window){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='none';io.unobserve(e.target)}}),{threshold:.08});$$('.card,.head,.portal,.cta,.domains,.faq,.mock,.hero > div').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(12px)';el.style.transition='opacity .55s ease,transform .55s ease';io.observe(el)})}
 
-  // Make dashboard controls feel like a real product demo.
-  const panels = {
-    overview: ['Overview', 'AitherTech platform overview and system status.'],
-    devices: ['My Devices', 'Manage connected Aither devices, firmware, and status.'],
-    cloud: ['Aither Cloud', 'Review storage, backups, media, logs, and cloud services.'],
-    security: ['Security Settings', 'Manage authentication, two-factor protection, API keys, and audit controls.'],
-    billing: ['Billing', 'Manage plans, invoices, licenses, and payment settings.']
-  };
-  $$('[data-panel]').forEach(button => {
-    button.addEventListener('click', () => {
-      $$('.side button').forEach(x => x.classList.remove('active'));
-      button.classList.add('active');
-      const [title, copy] = panels[button.dataset.panel] || panels.overview;
-      const titleEl = $('#dash-title');
-      const copyEl = $('#dash-copy');
-      if (titleEl) titleEl.textContent = title;
-      if (copyEl) copyEl.textContent = copy;
-    });
-  });
+// Mark active navigation link as the user scrolls
+const navLinks=$$('.links a[href^="#"]');const sections=navLinks.map(a=>$(a.getAttribute('href'))).filter(Boolean);
+if(sections.length&&'IntersectionObserver'in window){const nio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){navLinks.forEach(a=>a.removeAttribute('aria-current'));const a=navLinks.find(x=>x.getAttribute('href')==='#'+e.target.id);a?.setAttribute('aria-current','true')}}),{rootMargin:'-30% 0px -60%'});sections.forEach(s=>nio.observe(s))}
 
-  // Keyboard accessibility for common overlays.
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      $$('.modal.open,.search.open,.drawer.open').forEach(el => el.classList.remove('open'));
-      document.body.style.overflow = '';
-    }
-  });
+// Keyboard handling
+addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();searchOverlay?.classList.remove('open');drawer?.classList.remove('open');menu?.setAttribute('aria-expanded','false');body.style.overflow=''}if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();window.openSearch()}});
 
-  // Upgrade external script-driven modals when the older IDs are present.
-  const modal = $('#modal');
-  const modalTitle = $('#modal-title');
-  const modalText = $('#modal-text');
-  const closeModal = $('#close-modal');
-  const showModal = (title, text) => {
-    if (!modal) return;
-    if (modalTitle) modalTitle.textContent = title;
-    if (modalText) modalText.textContent = text;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  };
-  closeModal?.addEventListener('click', () => {
-    modal?.classList.remove('open');
-    document.body.style.overflow = '';
-  });
-  modal?.addEventListener('click', e => {
-    if (e.target === modal) {
-      modal.classList.remove('open');
-      document.body.style.overflow = '';
-    }
-  });
-  $$('[data-modal]').forEach(button => {
-    button.addEventListener('click', () => showModal(button.dataset.modal, button.dataset.message || 'This AitherTech feature is ready for the next integration step.'));
-  });
-
-  const year = $('#year');
-  if (year) year.textContent = new Date().getFullYear();
+// Footer year
+const year=$('#year');if(year)year.textContent=new Date().getFullYear();
 })();
