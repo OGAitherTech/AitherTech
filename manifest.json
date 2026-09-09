@@ -1,10 +1,17 @@
 {
-  "name": "AitherTech",
-  "short_name": "AitherTech",
-  "description": "The AitherTech connected technology platform.",
+  "name": "Aither Forge",
+  "short_name": "Aither Forge",
+  "description": "The Aither Forge home of Aither products and apps.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#060a12",
-  "theme_color": "#07101f",
-  "icons": []
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "icons": [
+    {
+      "src": "./aither-forge-logo.jpg",
+      "sizes": "700x511",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
 }
